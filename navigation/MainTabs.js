@@ -1,34 +1,36 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons, Feather } from '@expo/vector-icons';
-
+import TaskListScreen from '../screens/TaskListScreen';
 import HomeScreen from '../screens/HomeScreen';
-import TaskInputScreen from '../screens/TaskInputScreen';
 import CalendarScreen from '../screens/CalendarScreen';
+import { Ionicons, Feather } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarShowLabel: true,
-        tabBarActiveTintColor: '#4F6DF5',
-        tabBarInactiveTintColor: '#999',
-        tabBarIcon: ({ color, size }) => {
-          if (route.name === 'Tasks') {
-            return <Ionicons name="list-outline" size={size} color={color} />;
-          } else if (route.name === 'Planner') {
-            return <Feather name="clock" size={size} color={color} />;
-          } else if (route.name === 'Calendar') {
-            return <Ionicons name="calendar-outline" size={size} color={color} />;
-          }
-        },
-      })}
-    >
-      <Tab.Screen name="Planner" component={HomeScreen} />
-      <Tab.Screen name="Tasks" component={TaskInputScreen} />
-      <Tab.Screen name="Calendar" component={CalendarScreen} />
+    <Tab.Navigator screenOptions={{ headerShown: false }}>
+      <Tab.Screen
+        name="Planner"
+        component={HomeScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <Feather name="clock" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Tasks"
+        component={TaskListScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <Ionicons name="list-outline" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Calendar"
+        component={CalendarScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
+        }}
+      />
     </Tab.Navigator>
   );
 }

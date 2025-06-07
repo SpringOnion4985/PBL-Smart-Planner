@@ -8,19 +8,22 @@ import {
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
-  Platform
+  Platform,
 } from 'react-native';
+import { useUser } from '../contexts/UserContext'; // ✅ Added context hook
 
 export default function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const { setUser } = useUser(); // ✅ Get the setter
 
   const handleStart = () => {
-    // You can pass username/email to next screen if needed
-    navigation.navigate('Main'); // Navigates to bottom tabs (Planner/Home)
+    setUser({ username, email });
+    navigation.navigate('Main'); // MainTabNavigator
   };
 
   const handleSkip = () => {
+    setUser({ username: 'Guest', email: '' });
     navigation.navigate('Main');
   };
 

@@ -1,13 +1,53 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  View, Text, StyleSheet, TouchableOpacity,
+  Image, ScrollView
+} from 'react-native';
+import { Ionicons, Feather } from '@expo/vector-icons';
+import { useUser } from '../contexts/UserContext';
+import { useTasks } from '../contexts/TaskContext';
+import { scheduleTasks } from '../utils/scheduler';
+import moment from 'moment';
 
 export default function HomeScreen({ navigation }) {
+  const { user } = useUser();
+  const { tasks, setTasks } = useTasks();
+
+  const today = moment().format('YYYY-MM-DD');
+  const todayTasks = tasks.filter(t => t.deadline === today);
+  const completedTasks = todayTasks.filter(t => t.completed);
+  const nextTask = todayTasks.find(t => !t.completed);
+
+  const handleOptimize = () => {
+    // Dummy free time for now
+    const freeTime = {
+      Monday: "9-11",
+      Tuesday: "10-12",
+      Wednesday: "14-16",
+      Thursday: "",
+      Friday: "",
+      Saturday: "",
+      Sunday: "",
+    };
+
+    const newSchedule = scheduleTasks(freeTime, tasks);
+    console.log("Optimized Schedule:", newSchedule);
+
+    // Merge scheduled times back into tasks (optional)
+    const updatedTasks = tasks.map(task => {
+      const scheduled = newSchedule.find(s => s.taskTitle === task.title);
+      return scheduled ? { ...task, scheduled: true } : task;
+    });
+
+    setTasks(updatedTasks);
+    alert("Schedule optimized!");
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Good day!</Text>
+          <Text style={styles.greeting}>Good day, {user.username || 'Guest'}!</Text>
           <Text style={styles.subtext}>Let's manage your time efficiently</Text>
         </View>
         <TouchableOpacity>
@@ -22,27 +62,31 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.progressCard}>
         <Text style={styles.cardHeader}>Today's Progress</Text>
-        <Text style={styles.cardSub}>0/0 Tasks</Text>
-        <TouchableOpacity style={styles.optimizeBtn}>
+        <Text style={styles.cardSub}>
+          {completedTasks.length}/{todayTasks.length} Tasks
+        </Text>
+        <TouchableOpacity style={styles.optimizeBtn} onPress={handleOptimize}>
           <Text style={styles.optimizeText}>Optimize Schedule</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.comingUpCard}>
         <Text style={styles.cardHeader}>Coming Up Next</Text>
-        <Text style={styles.cardSub}>No upcoming tasks for today</Text>
+        <Text style={styles.cardSub}>
+          {nextTask ? `${nextTask.title} - ${nextTask.deadline}` : 'No upcoming tasks for today'}
+        </Text>
       </View>
 
       <View style={styles.navBar}>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Tasks')}>
           <Ionicons name="list-outline" size={24} color="#555" />
           <Text style={styles.navLabel}>Tasks</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Planner')}>
           <Feather name="clock" size={24} color="#555" />
           <Text style={styles.navLabel}>Planner</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Calendar')}>
           <Ionicons name="calendar-outline" size={24} color="#555" />
           <Text style={styles.navLabel}>Calendar</Text>
         </TouchableOpacity>
@@ -50,16 +94,20 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.taskSection}>
         <Text style={styles.taskTitle}>Today's Tasks</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Tasks')}>
           <Text style={styles.seeAll}>See All</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.noTasks}>
-        <Text style={styles.noTasksText}>No tasks for today. Add some tasks to get started!</Text>
+        <Text style={styles.noTasksText}>
+          {todayTasks.length > 0
+            ? 'Keep going!'
+            : 'No tasks for today. Add some tasks to get started!'}
+        </Text>
       </View>
 
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('Tasks')}>
         <Text style={styles.fabText}>＋</Text>
       </TouchableOpacity>
     </ScrollView>
