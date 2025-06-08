@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, FlatList, Image
+  ScrollView, FlatList, Image, Alert
 } from 'react-native';
 import moment from 'moment';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
+import { useTasks } from '../contexts/TaskContext';
 
 const priorities = ['All', 'High', 'Medium', 'Low'];
 const statuses = ['All', 'Completed', 'Active'];
@@ -15,21 +16,52 @@ const getWeekDates = () => {
 };
 
 export default function TaskListScreen({ navigation }) {
+  const { tasks, setTasks } = useTasks();
   const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
   const [priority, setPriority] = useState('All');
   const [status, setStatus] = useState('All');
-
-  const tasks = []; // Replace with real task fetching logic later
 
   const filteredTasks = tasks.filter(t => {
     return (
       (priority === 'All' || t.priority === priority) &&
       (status === 'All' || (status === 'Completed' ? t.completed : !t.completed)) &&
-      t.date === selectedDate
+      t.deadline === selectedDate
     );
   });
 
   const completedCount = filteredTasks.filter(t => t.completed).length;
+
+  const toggleCompletion = (index) => {
+    const updated = [...tasks];
+    updated[index].completed = !updated[index].completed;
+    setTasks(updated);
+  };
+
+  const deleteTask = (index) => {
+    Alert.alert(
+      'Delete Task',
+      'Are you sure you want to delete this task?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          onPress: () => {
+            const updated = [...tasks];
+            updated.splice(index, 1);
+            setTasks(updated);
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
+  const editTask = (task) => {
+    navigation.navigate('AddTask', { task, edit: true });
+  };
 
   return (
     <View style={styles.container}>
@@ -99,7 +131,34 @@ export default function TaskListScreen({ navigation }) {
           <FlatList
             data={filteredTasks}
             keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => <Text>{item.title}</Text>}
+            renderItem={({ item, index }) => (
+              <View style={styles.taskItem}>
+                <TouchableOpacity onPress={() => toggleCompletion(index)}>
+                  <Ionicons
+                    name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                    size={24}
+                    color={item.completed ? '#4CAF50' : '#555'}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ flex: 1, marginLeft: 10 }}
+                  onPress={() => navigation.navigate('TaskDetail', { task: item })}
+                >
+                  <Text style={[styles.taskTitle, item.completed && styles.completedTask]}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.taskMeta}>
+                    {item.duration} mins | Priority: {item.priority}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => editTask(item)}>
+                  <Feather name="edit" size={20} color="#333" style={{ marginRight: 12 }} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => deleteTask(index)}>
+                  <Feather name="trash" size={20} color="red" />
+                </TouchableOpacity>
+              </View>
+            )}
           />
         )}
       </View>
@@ -139,7 +198,14 @@ const styles = StyleSheet.create({
   activeFilter: { backgroundColor: '#4F6DF5' },
   filterText: { fontSize: 13, color: '#555' },
   activeFilterText: { color: '#fff', fontWeight: '600' },
-  taskContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  taskContainer: { flex: 1 },
+  taskItem: {
+    flexDirection: 'row', alignItems: 'center', padding: 10,
+    borderBottomWidth: 1, borderBottomColor: '#ddd'
+  },
+  taskTitle: { fontSize: 15, fontWeight: '600' },
+  completedTask: { textDecorationLine: 'line-through', color: '#aaa' },
+  taskMeta: { fontSize: 12, color: '#666' },
   emptyState: { alignItems: 'center', marginTop: 40 },
   emptyText: { fontSize: 16, fontWeight: '600', marginTop: 12 },
   emptyHint: { fontSize: 13, color: '#777', textAlign: 'center', marginTop: 4 },

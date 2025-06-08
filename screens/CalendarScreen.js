@@ -1,9 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { scheduleTasks } from '../utils/scheduler';
+import { useTasks } from '../contexts/TaskContext';
 
 export default function CalendarScreen({ route }) {
-  const { freeTime, tasks } = route.params;
+  const { tasks } = useTasks();
+
+  const freeTime = useMemo(() => {
+    return route?.params?.freeTime || {
+      Monday: "9-11",
+      Tuesday: "14-15",
+      Wednesday: "8-10",
+      Thursday: "",
+      Friday: "",
+      Saturday: "",
+      Sunday: "",
+    };
+  }, [route?.params?.freeTime]);
+
   const [schedule, setSchedule] = useState([]);
 
   useEffect(() => {
@@ -22,7 +36,9 @@ export default function CalendarScreen({ route }) {
             <Text style={styles.taskText}>
               📅 {item.date} | 🕒 {item.start}:00 - {item.end}:00
             </Text>
-            <Text style={styles.taskText}>📝 {item.taskTitle} ({item.minutesAllocated} min)</Text>
+            <Text style={styles.taskText}>
+              📝 {item.taskTitle} ({item.minutesAllocated} min)
+            </Text>
           </View>
         ))
       )}

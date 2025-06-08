@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,22 +9,42 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
-import { useUser } from '../contexts/UserContext'; // ✅ Added context hook
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUser } from '../contexts/UserContext';
 
 export default function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const { setUser } = useUser(); // ✅ Get the setter
+  const { user, setUser } = useUser();
 
-  const handleStart = () => {
-    setUser({ username, email });
-    navigation.navigate('Main'); // MainTabNavigator
+  useEffect(() => {
+    const checkLogin = async () => {
+      const stored = await AsyncStorage.getItem('user');
+      if (stored) {
+        const parsedUser = JSON.parse(stored);
+        setUser(parsedUser);
+      }
+    };
+    checkLogin();
+  }, []);
+
+  const handleStart = async () => {
+    if (!username || !email) {
+      Alert.alert('Please enter both username and email.');
+      return;
+    }
+
+    const userData = { username, email };
+    await AsyncStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
   };
 
-  const handleSkip = () => {
-    setUser({ username: 'Guest', email: '' });
-    navigation.navigate('Main');
+  const handleSkip = async () => {
+    const guestData = { username: 'Guest', email: '' };
+    await AsyncStorage.setItem('user', JSON.stringify(guestData));
+    setUser(guestData);
   };
 
   return (
@@ -34,7 +54,6 @@ export default function LoginScreen({ navigation }) {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <Image source={require('../assets/icon.png')} style={styles.logo} />
-
         <Text style={styles.title}>TimeSlotManager</Text>
         <Text style={styles.subtitle}>Optimize your day, one slot at a time</Text>
 

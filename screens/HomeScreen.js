@@ -6,12 +6,14 @@ import {
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useUser } from '../contexts/UserContext';
 import { useTasks } from '../contexts/TaskContext';
+import { useFreeTime } from '../contexts/FreeTimeContext';
 import { scheduleTasks } from '../utils/scheduler';
 import moment from 'moment';
 
 export default function HomeScreen({ navigation }) {
   const { user } = useUser();
   const { tasks, setTasks } = useTasks();
+  const { freeTime } = useFreeTime();
 
   const today = moment().format('YYYY-MM-DD');
   const todayTasks = tasks.filter(t => t.deadline === today);
@@ -19,21 +21,9 @@ export default function HomeScreen({ navigation }) {
   const nextTask = todayTasks.find(t => !t.completed);
 
   const handleOptimize = () => {
-    // Dummy free time for now
-    const freeTime = {
-      Monday: "9-11",
-      Tuesday: "10-12",
-      Wednesday: "14-16",
-      Thursday: "",
-      Friday: "",
-      Saturday: "",
-      Sunday: "",
-    };
-
     const newSchedule = scheduleTasks(freeTime, tasks);
     console.log("Optimized Schedule:", newSchedule);
 
-    // Merge scheduled times back into tasks (optional)
     const updatedTasks = tasks.map(task => {
       const scheduled = newSchedule.find(s => s.taskTitle === task.title);
       return scheduled ? { ...task, scheduled: true } : task;
@@ -50,7 +40,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.greeting}>Good day, {user.username || 'Guest'}!</Text>
           <Text style={styles.subtext}>Let's manage your time efficiently</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
           <Ionicons name="settings-outline" size={24} color="#666" />
         </TouchableOpacity>
       </View>
@@ -76,6 +66,24 @@ export default function HomeScreen({ navigation }) {
           {nextTask ? `${nextTask.title} - ${nextTask.deadline}` : 'No upcoming tasks for today'}
         </Text>
       </View>
+
+      {/* Set Free Time Button */}
+      <TouchableOpacity
+        style={styles.freeTimeBtn}
+        onPress={() => navigation.navigate('SetFreeTime')}
+      >
+        <Ionicons name="time-outline" size={20} color="#fff" />
+        <Text style={styles.freeTimeBtnText}>Set Free Time</Text>
+      </TouchableOpacity>
+
+      {/* View Free Time Button */}
+      <TouchableOpacity
+        style={styles.viewFreeTimeBtn}
+        onPress={() => navigation.navigate('FreeTime')}
+      >
+        <Ionicons name="eye-outline" size={20} color="#fff" />
+        <Text style={styles.freeTimeBtnText}>View Free Time</Text>
+      </TouchableOpacity>
 
       <View style={styles.navBar}>
         <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Tasks')}>
@@ -107,7 +115,7 @@ export default function HomeScreen({ navigation }) {
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('Tasks')}>
+      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddTask')}>
         <Text style={styles.fabText}>＋</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -162,4 +170,13 @@ const styles = StyleSheet.create({
     elevation: 5
   },
   fabText: { color: '#fff', fontSize: 30, lineHeight: 30 },
+  freeTimeBtn: {
+    flexDirection: 'row', backgroundColor: '#4F6DF5', padding: 12, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12
+  },
+  viewFreeTimeBtn: {
+    flexDirection: 'row', backgroundColor: '#6C63FF', padding: 12, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 20
+  },
+  freeTimeBtnText: { color: '#fff', marginLeft: 8, fontWeight: '600' },
 });

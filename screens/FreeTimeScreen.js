@@ -1,63 +1,76 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ScrollView, StyleSheet } from 'react-native';
-
-const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useFreeTime } from '../contexts/FreeTimeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function FreeTimeScreen({ navigation }) {
-  const [freeTime, setFreeTime] = useState(
-    daysOfWeek.reduce((acc, day) => ({ ...acc, [day]: '' }), {})
+  const { freeTime } = useFreeTime();
+
+  const renderDayRow = (day, slot) => (
+    <View key={day} style={styles.dayRow}>
+      <Text style={styles.dayText}>{day}</Text>
+      <Text style={styles.timeText}>{slot || 'No Free Time Set'}</Text>
+    </View>
   );
-
-  const handleInputChange = (day, value) => {
-    setFreeTime({ ...freeTime, [day]: value });
-  };
-
-  const handleContinue = () => {
-    console.log('Free time data:', freeTime);
-    navigation.navigate('Tasks', { freeTime });
-  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Enter your free time for each day (e.g., 8-10, 14-16)</Text>
-      {daysOfWeek.map((day) => (
-        <View key={day} style={styles.inputContainer}>
-          <Text style={styles.label}>{day}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., 8-10, 14-16"
-            value={freeTime[day]}
-            onChangeText={(value) => handleInputChange(day, value)}
-          />
-        </View>
-      ))}
-      <Button title="Continue to Tasks" onPress={handleContinue} />
+      <Text style={styles.header}>Your Weekly Free Time</Text>
+
+      {Object.keys(freeTime).map(day => renderDayRow(day, freeTime[day]))}
+
+      <TouchableOpacity
+        style={styles.editBtn}
+        onPress={() => navigation.navigate('SetFreeTime')}
+      >
+        <Ionicons name="create-outline" size={20} color="#fff" />
+        <Text style={styles.editBtnText}>Edit Free Time</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 24,
     backgroundColor: '#fff',
   },
   header: {
-    fontSize: 18,
-    marginBottom: 12,
+    fontSize: 20,
     fontWeight: 'bold',
+    marginBottom: 20,
     textAlign: 'center',
   },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
+  dayRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#f1f1f1',
+    padding: 14,
     borderRadius: 8,
-    padding: 10,
+    marginBottom: 12,
+  },
+  dayText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  timeText: {
+    fontSize: 16,
+    color: '#555',
+  },
+  editBtn: {
+    flexDirection: 'row',
+    backgroundColor: '#4F6DF5',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  editBtnText: {
+    color: '#fff',
+    fontWeight: '600',
+    marginLeft: 8,
+    fontSize: 16,
   },
 });
