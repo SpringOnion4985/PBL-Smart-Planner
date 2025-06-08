@@ -13,11 +13,13 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from '../contexts/UserContext';
+import { useNavigation } from '@react-navigation/native';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const { user, setUser } = useUser();
+  const navigation = useNavigation();
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -25,10 +27,23 @@ export default function LoginScreen({ navigation }) {
       if (stored) {
         const parsedUser = JSON.parse(stored);
         setUser(parsedUser);
+        Alert.alert(`Welcome back, ${parsedUser.username}!`);
+        navigation.replace('Main');
       }
     };
     checkLogin();
   }, []);
+
+  const validateEmail = (email) => {
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
+  };
+
+  const saveLoginHistory = async (entry) => {
+    const history = JSON.parse(await AsyncStorage.getItem('loginHistory')) || [];
+    history.unshift({ ...entry, timestamp: new Date().toISOString() });
+    await AsyncStorage.setItem('loginHistory', JSON.stringify(history.slice(0, 10))); // Keep last 10 logins
+  };
 
   const handleStart = async () => {
     if (!username || !email) {
@@ -36,15 +51,24 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
+    if (!validateEmail(email)) {
+      Alert.alert('Please enter a valid email address.');
+      return;
+    }
+
     const userData = { username, email };
     await AsyncStorage.setItem('user', JSON.stringify(userData));
+    await saveLoginHistory(userData);
     setUser(userData);
+    navigation.replace('Main');
   };
 
   const handleSkip = async () => {
     const guestData = { username: 'Guest', email: '' };
     await AsyncStorage.setItem('user', JSON.stringify(guestData));
+    await saveLoginHistory(guestData);
     setUser(guestData);
+    navigation.replace('Main');
   };
 
   return (
