@@ -2,8 +2,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Create the context
 const FreeTimeContext = createContext();
 
+// Provider component
 export const FreeTimeProvider = ({ children }) => {
   const [freeTime, setFreeTime] = useState({
     Monday: '',
@@ -15,24 +17,29 @@ export const FreeTimeProvider = ({ children }) => {
     Sunday: '',
   });
 
+  // Load free time from AsyncStorage when the app starts
   useEffect(() => {
     const loadFreeTime = async () => {
       try {
-        const storedTime = await AsyncStorage.getItem('freeTime');
-        if (storedTime) setFreeTime(JSON.parse(storedTime));
-      } catch (e) {
-        console.error('Error loading free time', e);
+        const stored = await AsyncStorage.getItem('freeTime');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setFreeTime(parsed);
+        }
+      } catch (error) {
+        console.error('Failed to load free time:', error);
       }
     };
     loadFreeTime();
   }, []);
 
+  // Automatically save to AsyncStorage whenever freeTime updates
   useEffect(() => {
     const saveFreeTime = async () => {
       try {
         await AsyncStorage.setItem('freeTime', JSON.stringify(freeTime));
-      } catch (e) {
-        console.error('Error saving free time', e);
+      } catch (error) {
+        console.error('Failed to save free time:', error);
       }
     };
     saveFreeTime();
@@ -45,4 +52,5 @@ export const FreeTimeProvider = ({ children }) => {
   );
 };
 
+// Custom hook
 export const useFreeTime = () => useContext(FreeTimeContext);

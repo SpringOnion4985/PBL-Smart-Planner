@@ -9,11 +9,20 @@ const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#4F6DF5',
+        tabBarInactiveTintColor: '#999',
+        tabBarStyle: { paddingVertical: 6, height: 60 },
+        tabBarLabelStyle: { fontSize: 12 },
+      }}
+    >
       <Tab.Screen
-        name="Planner"
+        name="Home" // ✅ Changed from 'Planner' to 'Home' to fix navigation.replace('Home')
         component={HomeScreen}
         options={{
+          tabBarLabel: 'Planner',
           tabBarIcon: ({ color, size }) => <Feather name="clock" size={size} color={color} />,
         }}
       />
@@ -21,14 +30,18 @@ export default function MainTabs() {
         name="Tasks"
         component={TaskListScreen}
         options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="list-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="list-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
         name="Calendar"
         component={CalendarScreen}
         options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-outline" size={size} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>

@@ -28,7 +28,7 @@ export default function LoginScreen() {
         const parsedUser = JSON.parse(stored);
         setUser(parsedUser);
         Alert.alert(`Welcome back, ${parsedUser.username}!`);
-        navigation.replace('Main');
+        navigation.replace('Main'); // ✅ Corrected
       }
     };
     checkLogin();
@@ -42,7 +42,7 @@ export default function LoginScreen() {
   const saveLoginHistory = async (entry) => {
     const history = JSON.parse(await AsyncStorage.getItem('loginHistory')) || [];
     history.unshift({ ...entry, timestamp: new Date().toISOString() });
-    await AsyncStorage.setItem('loginHistory', JSON.stringify(history.slice(0, 10))); // Keep last 10 logins
+    await AsyncStorage.setItem('loginHistory', JSON.stringify(history.slice(0, 10)));
   };
 
   const handleStart = async () => {
@@ -60,7 +60,7 @@ export default function LoginScreen() {
     await AsyncStorage.setItem('user', JSON.stringify(userData));
     await saveLoginHistory(userData);
     setUser(userData);
-    navigation.replace('Main');
+    navigation.replace('Main'); // ✅ Corrected
   };
 
   const handleSkip = async () => {
@@ -68,7 +68,7 @@ export default function LoginScreen() {
     await AsyncStorage.setItem('user', JSON.stringify(guestData));
     await saveLoginHistory(guestData);
     setUser(guestData);
-    navigation.replace('Main');
+    navigation.replace('Main'); // ✅ Corrected
   };
 
   return (
@@ -77,7 +77,7 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container}>
-        <Image source={require('../assets/icon.png')} style={styles.logo} />
+        <Image source={require('../assets/icon.jpg')} style={styles.logo} />
         <Text style={styles.title}>TimeSlotManager</Text>
         <Text style={styles.subtitle}>Optimize your day, one slot at a time</Text>
 

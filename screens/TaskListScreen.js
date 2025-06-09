@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet,
-  ScrollView, FlatList, Image, Alert
+  View, Text, TouchableOpacity, FlatList,
+  ScrollView, StyleSheet, Alert, Image
 } from 'react-native';
 import moment from 'moment';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -21,42 +21,33 @@ export default function TaskListScreen({ navigation }) {
   const [priority, setPriority] = useState('All');
   const [status, setStatus] = useState('All');
 
-  const filteredTasks = tasks.filter(t => {
-    return (
-      (priority === 'All' || t.priority === priority) &&
-      (status === 'All' || (status === 'Completed' ? t.completed : !t.completed)) &&
-      t.deadline === selectedDate
-    );
-  });
+  const filteredTasks = tasks.filter(t =>
+    (priority === 'All' || t.priority === priority) &&
+    (status === 'All' || (status === 'Completed' ? t.completed : !t.completed)) &&
+    t.deadline === selectedDate
+  );
 
   const completedCount = filteredTasks.filter(t => t.completed).length;
 
-  const toggleCompletion = (index) => {
-    const updated = [...tasks];
-    updated[index].completed = !updated[index].completed;
+  const toggleCompletion = (task) => {
+    const updated = tasks.map(t =>
+      t === task ? { ...t, completed: !t.completed } : t
+    );
     setTasks(updated);
   };
 
-  const deleteTask = (index) => {
-    Alert.alert(
-      'Delete Task',
-      'Are you sure you want to delete this task?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          onPress: () => {
-            const updated = [...tasks];
-            updated.splice(index, 1);
-            setTasks(updated);
-          },
-          style: 'destructive',
-        },
-      ]
-    );
+  const deleteTask = (task) => {
+    Alert.alert('Delete Task', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          const updated = tasks.filter(t => t !== task);
+          setTasks(updated);
+        }
+      }
+    ]);
   };
 
   const editTask = (task) => {
@@ -125,15 +116,15 @@ export default function TaskListScreen({ navigation }) {
           <View style={styles.emptyState}>
             <Image source={require('../assets/tasklist.png')} style={{ width: 60, height: 60 }} />
             <Text style={styles.emptyText}>No tasks found</Text>
-            <Text style={styles.emptyHint}>Tap the + button to add a new task for this day</Text>
+            <Text style={styles.emptyHint}>Tap the + button to add a new task</Text>
           </View>
         ) : (
           <FlatList
             data={filteredTasks}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item, index }) => (
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ item }) => (
               <View style={styles.taskItem}>
-                <TouchableOpacity onPress={() => toggleCompletion(index)}>
+                <TouchableOpacity onPress={() => toggleCompletion(item)}>
                   <Ionicons
                     name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
                     size={24}
@@ -154,7 +145,7 @@ export default function TaskListScreen({ navigation }) {
                 <TouchableOpacity onPress={() => editTask(item)}>
                   <Feather name="edit" size={20} color="#333" style={{ marginRight: 12 }} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => deleteTask(index)}>
+                <TouchableOpacity onPress={() => deleteTask(item)}>
                   <Feather name="trash" size={20} color="red" />
                 </TouchableOpacity>
               </View>
@@ -163,9 +154,11 @@ export default function TaskListScreen({ navigation }) {
         )}
       </View>
 
-      {/* Bottom Task Summary */}
+      {/* Summary */}
       <View style={styles.summaryBar}>
-        <Text style={styles.summaryText}>{completedCount}/{filteredTasks.length} Tasks Complete</Text>
+        <Text style={styles.summaryText}>
+          {completedCount}/{filteredTasks.length} Tasks Completed
+        </Text>
       </View>
 
       {/* Floating Button */}
@@ -183,8 +176,8 @@ const styles = StyleSheet.create({
   monthLabel: { marginTop: 16, fontSize: 16, fontWeight: '600', color: '#555' },
   dateRow: { flexDirection: 'row', marginVertical: 12 },
   dateBox: {
-    width: 50, alignItems: 'center', paddingVertical: 10, borderRadius: 10, marginRight: 10,
-    backgroundColor: '#eee'
+    width: 50, alignItems: 'center', paddingVertical: 10, borderRadius: 10,
+    marginRight: 10, backgroundColor: '#eee'
   },
   activeDate: { backgroundColor: '#4F6DF5' },
   dateText: { fontSize: 12, color: '#444' },

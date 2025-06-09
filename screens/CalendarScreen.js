@@ -1,122 +1,115 @@
-// screens/CalendarScreen.js
 import React, { useState } from 'react';
-import {
-  View, Text, StyleSheet, TouchableOpacity, FlatList, Alert
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useTasks } from '../contexts/TaskContext';
-import { Ionicons, Feather } from '@expo/vector-icons';
 import moment from 'moment';
-import { useNavigation } from '@react-navigation/native';
 
-export default function CalendarScreen() {
+export default function CalendarScreen({ navigation }) {
   const { tasks, setTasks } = useTasks();
   const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
-  const navigation = useNavigation();
 
-  const handleToggleComplete = (task) => {
-    const updated = tasks.map(t =>
-      t.title === task.title && t.deadline === task.deadline
-        ? { ...t, completed: !t.completed }
-        : t
-    );
-    setTasks(updated);
+  const dateTasks = tasks.filter(task => task.deadline === selectedDate);
+
+  const toggleCompletion = (taskIndex) => {
+    const updated = [...tasks];
+    const realIndex = tasks.findIndex(t => t === dateTasks[taskIndex]);
+    if (realIndex !== -1) {
+      updated[realIndex].completed = !updated[realIndex].completed;
+      setTasks(updated);
+    }
   };
 
-  const handleDelete = (task) => {
-    Alert.alert("Confirm Delete", "Are you sure you want to delete this task?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete", style: "destructive", onPress: () => {
-          setTasks(tasks.filter(t => !(t.title === task.title && t.deadline === task.deadline)));
-        }
-      }
-    ]);
-  };
-
-  const filteredTasks = tasks.filter(t => t.deadline === selectedDate);
+  const markedDates = tasks.reduce((acc, task) => {
+    const date = task.deadline;
+    if (!acc[date]) {
+      acc[date] = { marked: true, dotColor: '#4F6DF5' };
+    }
+    return acc;
+  }, { [selectedDate]: { selected: true, selectedColor: '#4F6DF5' } });
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Calendar</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Calendar View</Text>
 
       <Calendar
-        onDayPress={(day) => setSelectedDate(day.dateString)}
-        markedDates={{
-          [selectedDate]: { selected: true, marked: true, selectedColor: '#4F6DF5' }
-        }}
+        onDayPress={day => setSelectedDate(day.dateString)}
+        markedDates={markedDates}
         theme={{
+          selectedDayBackgroundColor: '#4F6DF5',
           todayTextColor: '#4F6DF5',
+          arrowColor: '#4F6DF5',
         }}
       />
 
-      <Text style={styles.dateText}>
-        {moment(selectedDate).format('dddd, MMMM D, YYYY')}
-      </Text>
-
-      {filteredTasks.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="calendar-outline" size={40} color="#ccc" />
-          <Text style={styles.emptyText}>No tasks for this day</Text>
-        </View>
+      <Text style={styles.subheader}>Tasks on {selectedDate}</Text>
+      {dateTasks.length === 0 ? (
+        <Text style={styles.noTask}>No tasks for this date.</Text>
       ) : (
         <FlatList
-          data={filteredTasks}
-          keyExtractor={(item, index) => `${item.title}-${index}`}
-          renderItem={({ item }) => (
-            <View style={styles.taskCard}>
-              <TouchableOpacity onPress={() => handleToggleComplete(item)}>
-                <Ionicons
-                  name={item.completed ? "checkmark-circle" : "ellipse-outline"}
-                  size={24}
-                  color={item.completed ? "#4F6DF5" : "#aaa"}
-                />
+          data={dateTasks}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={({ item, index }) => (
+            <View style={styles.taskItem}>
+              <TouchableOpacity onPress={() => toggleCompletion(index)}>
+                <Text style={{ fontSize: 18 }}>
+                  {item.completed ? '✅' : '⬜️'}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
+                style={{ marginLeft: 12 }}
                 onPress={() => navigation.navigate('TaskDetail', { task: item })}
-                style={{ flex: 1 }}
               >
-                <Text style={[styles.taskTitle, item.completed && styles.completedTask]}>
-                  {item.title}
+                <Text
+                  style={[
+                    styles.taskText,
+                    item.completed && styles.completedTask,
+                  ]}
+                >
+                  {item.title} ({item.duration} mins)
                 </Text>
-                <Text style={styles.taskInfo}>
-                  {item.duration} min • {item.priority}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDelete(item)}>
-                <Feather name="trash-2" size={20} color="#f66" />
               </TouchableOpacity>
             </View>
           )}
         />
       )}
-
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('AddTask')}
-      >
-        <Text style={styles.fabText}>＋</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
-  header: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
-  dateText: { fontSize: 14, color: '#444', marginTop: 10, textAlign: 'center' },
-  taskCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f1f1',
-    padding: 12, borderRadius: 10, marginVertical: 6
+  container: {
+    padding: 16,
+    backgroundColor: '#fff',
+    flexGrow: 1,
   },
-  taskTitle: { fontSize: 16, fontWeight: '600', marginLeft: 10 },
-  completedTask: { textDecorationLine: 'line-through', color: '#888' },
-  taskInfo: { fontSize: 12, color: '#555', marginLeft: 10 },
-  emptyContainer: { alignItems: 'center', marginTop: 40 },
-  emptyText: { marginTop: 12, fontSize: 16, color: '#888' },
-  fab: {
-    position: 'absolute', right: 20, bottom: 30, backgroundColor: '#4F6DF5',
-    width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center'
+  header: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 12,
   },
-  fabText: { color: '#fff', fontSize: 30 },
+  subheader: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  taskItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  taskText: {
+    fontSize: 14,
+  },
+  completedTask: {
+    textDecorationLine: 'line-through',
+    color: '#999',
+  },
+  noTask: {
+    fontSize: 14,
+    color: '#777',
+    marginTop: 8,
+  },
 });

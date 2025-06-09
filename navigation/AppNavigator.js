@@ -7,6 +7,8 @@ import TaskDetailScreen from '../screens/TaskDetailScreen';
 import FreeTimeScreen from '../screens/FreeTimeScreen';
 import SetFreeTimeScreen from '../screens/SetFreeTimeScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import UploadTimetableScreen from '../screens/UploadTimetableScreen';
+import ImageToTextScreen from '../screens/ImageToTextScreen';
 import { useUser } from '../contexts/UserContext';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -35,6 +37,8 @@ export default function AppNavigator() {
           <Stack.Screen name="FreeTime" component={FreeTimeScreen} />
           <Stack.Screen name="SetFreeTime" component={SetFreeTimeScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="UploadTimetable" component={UploadTimetableScreen} />
+          <Stack.Screen name="ImageToText" component={ImageToTextScreen} />
         </>
       )}
     </Stack.Navigator>

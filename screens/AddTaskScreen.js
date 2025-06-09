@@ -7,13 +7,17 @@ import { useTasks } from '../contexts/TaskContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 
-export default function AddTaskScreen({ navigation }) {
+export default function AddTaskScreen({ navigation, route }) {
   const { tasks, setTasks } = useTasks();
+  const isEdit = route?.params?.edit;
+  const editingTask = route?.params?.task;
 
-  const [title, setTitle] = useState('');
-  const [duration, setDuration] = useState('');
-  const [priority, setPriority] = useState('Medium');
-  const [deadline, setDeadline] = useState(new Date());
+  const [title, setTitle] = useState(editingTask?.title || '');
+  const [duration, setDuration] = useState(editingTask?.duration?.toString() || '');
+  const [priority, setPriority] = useState(editingTask?.priority || 'Medium');
+  const [deadline, setDeadline] = useState(
+    editingTask ? moment(editingTask.deadline, 'YYYY-MM-DD').toDate() : new Date()
+  );
   const [showPicker, setShowPicker] = useState(false);
 
   const handleSubmit = () => {
@@ -22,21 +26,30 @@ export default function AddTaskScreen({ navigation }) {
       return;
     }
 
-    const newTask = {
+    const taskData = {
+      id: isEdit ? editingTask.id : Date.now().toString(), // ✅ assign ID
       title,
       duration: parseInt(duration),
       deadline: moment(deadline).format('YYYY-MM-DD'),
       priority,
-      completed: false
+      completed: editingTask?.completed || false
     };
 
-    setTasks([...tasks, newTask]);
+    if (isEdit) {
+      const updatedTasks = tasks.map(task =>
+        task.id === editingTask.id ? taskData : task
+      );
+      setTasks(updatedTasks);
+    } else {
+      setTasks([...tasks, taskData]);
+    }
+
     navigation.goBack();
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Add New Task</Text>
+      <Text style={styles.heading}>{isEdit ? 'Edit Task' : 'Add New Task'}</Text>
 
       <TextInput
         placeholder="Task Title"
@@ -78,7 +91,7 @@ export default function AddTaskScreen({ navigation }) {
         <DateTimePicker
           value={deadline}
           mode="date"
-          display="default"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={(event, selectedDate) => {
             setShowPicker(false);
             if (selectedDate) setDeadline(selectedDate);
@@ -87,7 +100,7 @@ export default function AddTaskScreen({ navigation }) {
       )}
 
       <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-        <Text style={styles.submitText}>Add Task</Text>
+        <Text style={styles.submitText}>{isEdit ? 'Update Task' : 'Add Task'}</Text>
       </TouchableOpacity>
     </View>
   );
